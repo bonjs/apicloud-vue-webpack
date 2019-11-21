@@ -25,6 +25,7 @@ module.exports = {
 		login: ['./src/login.js',...isDev ? ['webpack-hot-middleware/client?noInfo=true&reload=true'] : []],
 	},
 	*/
+
 	entry: function() {
 
 		var glob = require("glob")
@@ -33,15 +34,15 @@ module.exports = {
 		var a = {};
 		mg.forEach(function(it, i) {
 			var fileName = it.match(/(\w+)\.js/)[1];
-			a[fileName] = [it, 'webpack-hot-middleware/client?noInfo=true&reload=true']
+			a[fileName] = [it, ...isDev ? ['webpack-hot-middleware/client?noInfo=false&reload=true'] : []]
 		})
 
 		return a;
-
 	}(),
+	
 	output: {
 		pathinfo: true, //输入代码添加额外的路径注释，提高代码可读性
-		filename: isDev ? '[name]-[hash].js' : '[name]-[chunkhash].js',
+		filename: isDev ? '[name].js' : '[name]-[chunkhash].js',
 		publicPath: '/',
 		hashDigestLength: 4
 	},
@@ -95,7 +96,13 @@ module.exports = {
 		]
 	},
 	plugins: [
+		
+		new webpack.DllReferencePlugin({
+            context: __dirname,
+            manifest: require("./dll/vendors-manifest.json")
+        }),
 
+		/*
 		new HtmlWebPackPlugin({
 			template: "./src/index.html",
 			filename: "./index.html",
@@ -108,7 +115,17 @@ module.exports = {
 			chunksSortMode: 'none',
 			chunks: ['login', "runtime"],
 		}),
+		*/
 
+		/*
+		new HtmlWebPackPlugin({
+			template: "./src/index.html",
+			filename: "./m1.html",
+			chunksSortMode: 'none',
+			chunks: ['m1', "runtime"],
+		}),
+		*/
+		
 		...(function() {
 
 			var glob = require('glob')
@@ -124,7 +141,8 @@ module.exports = {
 					template: "./src/index.html",
 					filename: `./${fileName}.html`,
 					chunksSortMode: 'none',
-					chunks: [fileName, "runtime"],
+					inject : 'none',
+					chunks: ['runtime', fileName],
 				}));
 			});
 
@@ -160,9 +178,11 @@ module.exports = {
 
 	optimization: {
 		minimize: false, //是否进行代码压缩
-		/* runtimeChunk: {
+		/*
+		runtimeChunk: {
 		  name: 'runtime'
-		}, */
+		},
+		*/
 		splitChunks: {
 		  chunks: "async", //默认为async，表示只会提取异步加载模块的公共代码，initial表示只会提取初始入口模块的公共代码，all表示同时提取前两者的代码。
 		  minSize: 30000, //模块大于30k会被抽离到公共模块

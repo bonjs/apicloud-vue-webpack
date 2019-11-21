@@ -10,8 +10,6 @@ const session = require('express-session');
 const express = require('express');
 const app = express();
 
-const async = require('async')
-const mongojs = require("mongojs")
 const config = require("./config")
 
 
@@ -139,6 +137,7 @@ app.use(history({
 }));
 
 app.use(express.static('./dist'))
+app.use(express.static('./dll'))
 
 
 

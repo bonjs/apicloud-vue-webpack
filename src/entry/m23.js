@@ -1,5 +1,4 @@
 
-
 import Vue from 'vue';
 import app from '../components/m23.vue'
 
@@ -9,9 +8,10 @@ new Vue({
 		return h(app)
 	}
 })
-
+/*
 if(module.hot) {
 	module.hot.accept();
 }
+*/
 
 

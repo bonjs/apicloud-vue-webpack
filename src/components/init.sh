@@ -1,15 +1,16 @@
 #/bin/sh
 
+count=${1};
 
-for((i = 1; i <= 100; i++))
+rm -rf ./m*
+for((i = 1; i <= $count; i++))
 do
 	echo "
-
-
-<template lang="pug">
+<template lang=\"pug\">
   .list
     the-nav
     div 这是m$i
+    button(@click=\"go()\") 下一页
     
 </template>
 <script>
@@ -18,6 +19,11 @@ do
 import Vue from 'vue';
 import axios from 'axios';
 import theNav from './theNav.vue'
+
+import vconsole from 'vconsole'
+
+new vconsole();
+
 export default {
   data() {
     return {
@@ -26,6 +32,18 @@ export default {
   async mounted() {
   },
   methods: {
+    go() {
+      window.location.href = \"./m$(($i+1)).html\";
+      return;
+      if (window.api) {
+        api.openWin({
+          name: \"m$(($i+1))\",
+          url: \"./m$(($i+1)).html\"
+        });
+      } else {
+        window.location.href = \"./m$(($i+1)).html\"
+      }
+    }
   },
   components: {
     theNav
