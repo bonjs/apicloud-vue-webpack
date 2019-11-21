@@ -7,6 +7,7 @@ const proxy = require('http-proxy-middleware');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const fs  = require('fs');
 const express = require('express');
 const app = express();
 
@@ -62,19 +63,51 @@ app.get(/\.(js|css|png)$/, (req, res, next) => {
   next();
 });
 
-
-
-app.get('/', function(req, res, next) {
-
-  next();
-
-  return;
-  if(req.session.user) {
-    next();
-  } else {
-    res.redirect('/login.html')
+var getIndexHtml = function() {
+  var html;
+  return function() {
+    if(html) {
+      return html;
+    }
+    return new Promise(function(resolve, reject) {
+      fs.readFile('./src/index.html', function(err, s) {
+        if(!err) {
+          resolve(html = s.toString());
+        }
+      });
+    });
   }
-})
+}();
+
+
+function getHash() {
+  return new Promise(function(resolve, reject) {
+    if(process.env.hash) {
+      resolve(process.env.hash);
+    }
+  });
+}
+
+if (isDev) {
+
+  // 启动node服务来代替html-webpack-plugin生成html以减轻webpack编译负担
+  app.get('/:mod.html', async function (req, res, next) {
+    var mod = req.params.mod;
+
+    var html = await getIndexHtml();
+
+    res.send(littleTpl(html, {
+      mod: `${mod}-${process.env.hash}.js`,
+      vendor: `vendor-${process.env.hash}.js`
+    }))
+  });
+}
+
+function littleTpl(tpl, data) {
+  return tpl.replace(/###([^#]+)###/g, function(x, a) {
+    return data[a] && data[a];
+  });
+}
 
 app.post('/login', async function (req, res) {
   var user = await new Promise(function(resolve, reject) {
@@ -140,9 +173,6 @@ app.use(express.static('./dist'))
 app.use(express.static('./dll'))
 
 
-
-
-
 if(isDev) {
 
   var webpackDevMiddleware = require('webpack-dev-middleware');
@@ -165,70 +195,7 @@ if(isDev) {
   app.use(hotMiddleware);
 }
 
-var port = 9106
+var port = 3000;
 app.listen(port, function(req, res) {
   console.log(`listening on port ${port}!`);
 });
-
-
-
-function login (opts, next) {
-    // crypto password
-    var md5pwd = util.md5Encrypt(opts.pwd)
-    var db = mongo(['users'])
-
-    async.waterfall([
-        function(done){
-            db.users.findOne({
-                uid: opts.uid,
-                pwd: md5pwd
-            }, function(err, user) {
-                if (err) {
-                    return next('无法连接数据库。')
-                }
-                if (!user) {
-                    return next('用户名和密码不匹配。')
-                }
-                if (!user.enabled) {
-                    return next('用户已被锁定，无法登录。')
-                }
-                done(null, user)
-            })
-        },
-        function(user, done){
-            db.users.update({uid: opts.uid }, {$set: {modified: new Date() } }, function(err){
-                if (err) {
-                  console.error("failed to update modified: %s", err.message)
-                }
-                next(null, user)
-            })
-        }
-    ], next)
-}
-
-
-var _mongodb;
-function mongo (connectionString, collections) {
-    if (!Array.isArray(collections) || collections.length === 0) {
-        collections = connectionString
-        connectionString = config.mongodb.connections['default']
-    }
-    var mdb
-    if (!_mongodb || !(mdb = _mongodb[connectionString])) {
-        _mongodb = _mongodb || {}
-        mdb = mongojs(connectionString)
-        mdb.on('error', function(err){
-            console.error('MongoDb error:', err.message)
-            mdb.close()
-        })
-        _mongodb[connectionString] = mdb
-    }
-    var db = {}
-    for (var i = 0; i < collections.length; i++) {
-        var collection = collections[i]
-        db[collection] = mdb.collection(collection)
-    }
-    return db
-}
-
-

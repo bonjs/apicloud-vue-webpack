@@ -2,7 +2,7 @@
 <template>
   <div>
     <the-nav></the-nav>
-    <div> 这是m1ddss</div>
+    <div> 这是m1</div>
     <button @click="go()"> 下一页</button>
   </div>
 </template>

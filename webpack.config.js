@@ -8,8 +8,6 @@ const uglify = require('uglifyjs-webpack-plugin');
 
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
-
-
 const webpack = require('webpack');
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -26,23 +24,30 @@ module.exports = {
 	},
 	*/
 
-	entry: function() {
+	entry: function () {
 
 		var glob = require("glob")
 		var mg = glob.sync("./src/entry/*.js", {});
 
 		var a = {};
-		mg.forEach(function(it, i) {
+		mg.forEach(function (it, i) {
 			var fileName = it.match(/(\w+)\.js/)[1];
 			a[fileName] = [it, ...isDev ? ['webpack-hot-middleware/client?noInfo=false&reload=true'] : []]
 		})
 
 		return a;
 	}(),
-	
+
 	output: {
 		pathinfo: true, //输入代码添加额外的路径注释，提高代码可读性
-		filename: isDev ? '[name].js' : '[name]-[chunkhash].js',
+		filename: isDev ? function (data, i) {
+			process.env.hash = data.hash;
+			/**
+			 * a.hash
+			 * a.chunk.renderedHash
+			 */
+			return '[name]-[hash].js'
+		} : '[name]-[chunkhash].js',
 		publicPath: '/',
 		hashDigestLength: 4
 	},
@@ -96,11 +101,11 @@ module.exports = {
 		]
 	},
 	plugins: [
-		
+
 		new webpack.DllReferencePlugin({
-            context: __dirname,
-            manifest: require("./dll/vendors-manifest.json")
-        }),
+			context: __dirname,
+			manifest: require("./dll/vendors-manifest.json")
+		}),
 
 		/*
 		new HtmlWebPackPlugin({
@@ -125,15 +130,20 @@ module.exports = {
 			chunks: ['m1', "runtime"],
 		}),
 		*/
-		
-		...(function() {
+		...(function () {
+
+			if (isDev) {
+				return [];
+			}
+
 
 			var glob = require('glob')
 
 			var a = [];
+
 			var mg = glob.sync("./src/entry/*.js", {});
 
-			mg.forEach(function(it, i) {
+			mg.forEach(function (it, i) {
 				// ./src/entry/m1.js
 
 				var fileName = it.match(/(\w+)\.js/)[1];
@@ -141,39 +151,39 @@ module.exports = {
 					template: "./src/index.html",
 					filename: `./${fileName}.html`,
 					chunksSortMode: 'none',
-					inject : 'none',
-					chunks: ['runtime', fileName],
+					inject: 'none',
+					chunks: ['runtime', 'vendor', fileName],
 				}));
 			});
 
 			return a;
 		}()),
-		
+
 		new webpack.NamedModulesPlugin(),
 		new VueLoaderPlugin(),
-		
+
 		...
 		isDev ? [
 			new webpack.HotModuleReplacementPlugin()
 		] : [
-			new uglify({
-				extractComments: {
-					condition: true,
-					filename(file) {
-						return `${file}`;
-					},
-					banner(commentsFile) {
-						return `Copyright Alex Sun All Rights Reserved`;
+				new uglify({
+					extractComments: {
+						condition: true,
+						filename(file) {
+							return `${file}`;
+						},
+						banner(commentsFile) {
+							return `Copyright Alex Sun All Rights Reserved`;
+						}
 					}
-				}
-			}),
-			new MiniCssExtractPlugin({
-				// Options similar to the same options in webpackOptions.output
-				// both options are optional
-				filename: "[name]-[chunkhash].css",
-				chunkFilename: "[name]-[chunkhash].css"
-			})
-		]
+				}),
+				new MiniCssExtractPlugin({
+					// Options similar to the same options in webpackOptions.output
+					// both options are optional
+					filename: "[name]-[chunkhash].css",
+					chunkFilename: "[name]-[chunkhash].css"
+				})
+			]
 	],
 
 	optimization: {
@@ -184,27 +194,28 @@ module.exports = {
 		},
 		*/
 		splitChunks: {
-		  chunks: "async", //默认为async，表示只会提取异步加载模块的公共代码，initial表示只会提取初始入口模块的公共代码，all表示同时提取前两者的代码。
-		  minSize: 30000, //模块大于30k会被抽离到公共模块
-		  minChunks: 2, //模块出现1次就会被抽离到公共模块
-		  maxAsyncRequests: 6, //异步模块，一次最多只能被加载5个
-		  maxInitialRequests: 3, //入口模块最多只能加载3个
-		  name: true,
-		  cacheGroups: {
-			vendor: {
-			  test: /[\\/]node_modules[\\/]/,
-			  name: "vendor",
-			  priority: 10,
-			},
-			common: {
-			  name: "common",
-			  priority: 1,
-			  minChunks: 2,
+			chunks: "all", //默认为async，表示只会提取异步加载模块的公共代码，initial表示只会提取初始入口模块的公共代码，all表示同时提取前两者的代码。
+			minSize: 30000, //模块大于30k会被抽离到公共模块
+			minChunks: 2, //模块出现1次就会被抽离到公共模块
+			maxAsyncRequests: 6, //异步模块，一次最多只能被加载5个
+			maxInitialRequests: 3, //入口模块最多只能加载3个
+			name: true,
+			cacheGroups: {
+				vendor: {
+					test: /[\\/]node_modules[\\/]/,
+					name: "vendor",
+					filename: '[name]-[hash].js',
+					priority: 10,
+				},
+				common: {
+					name: "common",
+					priority: 1,
+					minChunks: 2,
+				}
 			}
-		  }
 		}
-	  },
-	  devServer: {
+	},
+	devServer: {
 		contentBase: require('path').join(__dirname, "dist"),
 		compress: false,
 		port: 3000,
