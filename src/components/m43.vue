@@ -1,10 +1,10 @@
 
-<template lang="pug">
-  .list
-    the-nav
-    div 这是m43
-    button(@click="go()") 下一页
-    
+<template>
+  <div>
+    <the-nav></the-nav>
+    <div> 这是m43</div>
+    <button @click="go()"> 下一页</button>
+  </div>
 </template>
 <script>
 

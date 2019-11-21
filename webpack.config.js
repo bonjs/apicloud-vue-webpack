@@ -72,13 +72,13 @@ module.exports = {
 					"style-loader",
 					"css-loader"
 				]
-			}, {
+			/*}, {
 				test: /index\.pug$/,
 				use: ['raw-loader', 'pug-html-loader']
 			}, {
 				test: /\.pug$/,
 				use: ['pug-html-loader']
-			}, {
+			*/}, {
 				test: /\.vue$/,
 				use: 'vue-loader'
 			}, {

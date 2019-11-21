@@ -1,12 +1,12 @@
 
 
 
-<template lang=pug>
-  .list
-    div 这是nav
-    button(@click="close()") close
-    button(@click="reload()") reload
-    
+<template>
+  <div>
+    <div> 这是nav</div>
+    <button @click="close()"> close</button>
+    <button @click="reload()">reload</button>
+  </div>
 </template>
 <script>
 

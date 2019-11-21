@@ -6,12 +6,12 @@ rm -rf ./m*
 for((i = 1; i <= $count; i++))
 do
 	echo "
-<template lang=\"pug\">
-  .list
-    the-nav
-    div 这是m$i
-    button(@click=\"go()\") 下一页
-    
+<template>
+  <div>
+    <the-nav></the-nav>
+    <div> 这是m$i</div>
+    <button @click=\"go()\"> 下一页</button>
+  </div>
 </template>
 <script>
 
