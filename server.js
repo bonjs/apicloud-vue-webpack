@@ -1,6 +1,5 @@
 
 const webpackConfig = require('./webpack.config.js');
-const util = require('./util')
 
 const webpack = require('webpack');
 const proxy = require('http-proxy-middleware');
@@ -11,7 +10,6 @@ const fs  = require('fs');
 const express = require('express');
 const app = express();
 
-const config = require("./config")
 
 
 var isDev = process.env.NODE_ENV == 'development';
@@ -92,20 +90,38 @@ if (isDev) {
 
   // 启动node服务来代替html-webpack-plugin生成html以减轻webpack编译负担
   app.get('/:mod.html', async function (req, res, next) {
-    var mod = req.params.mod;
 
+    var mod = req.params.mod;
+    
     var html = await getIndexHtml();
+    console.log(html)
+
+    /*
+    <!-- ###mod### -->
+    <!-- ###vendor### -->
+    */
 
     res.send(littleTpl(html, {
-      mod: `${mod}-${process.env.hash}.js`,
-      vendor: `vendor-${process.env.hash}.js`
+      mod: `./${mod}-${process.env.hash}.js`,
+      vendor: `./vendor-${process.env.hash}.js`
     }))
   });
 }
 
+
+/*
+
+    <!-- ###mod### -->
+    <!-- ###vendor### -->
+
+    <script src="./m1-fdsa.js"></script>
+    <script src="./vendor-fdsa.js"></script>
+*/
 function littleTpl(tpl, data) {
-  return tpl.replace(/###([^#]+)###/g, function(x, a) {
-    return data[a] && data[a];
+  return tpl.replace(/<!--\s*###([^#]+)###\s*-->/g, function(x, a) {
+    if(data[a] && data[a]) {
+      return `<script src="${data[a]}"></script>`;
+    }
   });
 }
 
