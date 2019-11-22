@@ -12,7 +12,12 @@ const webpack = require('webpack');
 
 const isDev = process.env.NODE_ENV === 'development';
 
-console.log('isDev: ', isDev)
+
+if(isDev) {
+	console.log('当前模式:', '\x1B[32mdev\x1B[0m')
+} else {
+	console.log('当前模式:', '\x1B[91mprod\x1B[0m')
+}
 
 module.exports = {
 	devtool: isDev ? 'cheap-module-eval-source-map' : '',
@@ -48,7 +53,7 @@ module.exports = {
 			 */
 			return '[name]-[hash].js'
 		} : '[name]-[chunkhash].js',
-		publicPath: '/',
+		publicPath: './',
 		hashDigestLength: 4
 	},
 	module: {
@@ -166,24 +171,24 @@ module.exports = {
 		isDev ? [
 			new webpack.HotModuleReplacementPlugin()
 		] : [
-				new uglify({
-					extractComments: {
-						condition: true,
-						filename(file) {
-							return `${file}`;
-						},
-						banner(commentsFile) {
-							return `Copyright Alex Sun All Rights Reserved`;
-						}
+			new uglify({
+				extractComments: {
+					condition: true,
+					filename(file) {
+						return `${file}`;
+					},
+					banner(commentsFile) {
+						return `Copyright Alex Sun All Rights Reserved`;
 					}
-				}),
-				new MiniCssExtractPlugin({
-					// Options similar to the same options in webpackOptions.output
-					// both options are optional
-					filename: "[name]-[chunkhash].css",
-					chunkFilename: "[name]-[chunkhash].css"
-				})
-			]
+				}
+			}),
+			new MiniCssExtractPlugin({
+				// Options similar to the same options in webpackOptions.output
+				// both options are optional
+				filename: "[name]-[chunkhash].css",
+				chunkFilename: "[name]-[chunkhash].css"
+			})
+		]
 	],
 
 	optimization: {
