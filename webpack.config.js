@@ -53,7 +53,7 @@ module.exports = {
 			 */
 			return '[name]-[hash].js'
 		} : '[name]-[chunkhash].js',
-		publicPath: './',
+		publicPath: '',
 		hashDigestLength: 4
 	},
 	module: {
